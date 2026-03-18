@@ -4,6 +4,8 @@ import HeroSection from "./components/Header/HeroSection";
 import BodyPage from "./components/Pages/BodyPage";
 import PlanPage from "./components/Pages/PlanPage";
 import ServicePage from "./components/Pages/ServicePage";
+import TeamPage from "./components/Pages/TeamPage";
+import ReviewPage from "./components/Pages/ReviewPage";
 
 const App = () => {
   return (
@@ -16,6 +18,8 @@ const App = () => {
       <PlanPage/>
       <div>
         <ServicePage/>
+        <TeamPage/>
+        <ReviewPage/>
       </div>
     </div>
   );
