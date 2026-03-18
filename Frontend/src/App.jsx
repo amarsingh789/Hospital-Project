@@ -6,6 +6,8 @@ import PlanPage from "./components/Pages/PlanPage";
 import ServicePage from "./components/Pages/ServicePage";
 import TeamPage from "./components/Pages/TeamPage";
 import ReviewPage from "./components/Pages/ReviewPage";
+import FAQPage from "./components/Pages/FAQPage";
+import StatsSection from "./components/Pages/StatsSection";
 
 const App = () => {
   return (
@@ -18,8 +20,10 @@ const App = () => {
       <PlanPage/>
       <div>
         <ServicePage/>
+        <StatsSection/>
         <TeamPage/>
         <ReviewPage/>
+        <FAQPage/>
       </div>
     </div>
   );
