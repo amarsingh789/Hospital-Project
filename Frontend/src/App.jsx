@@ -9,11 +9,13 @@ import ReviewPage from "./components/Pages/ReviewPage";
 import FAQPage from "./components/Pages/FAQPage";
 import StatsSection from "./components/Pages/StatsSection";
 import Footer from "./components/Footer/Footer";
+import AuthModal from "./components/Pages/AuthModal";
 
 const App = () => {
   return (
     <div>
       <Navbar />
+      <AuthModal/>
       <div className="px-4">
         <HeroSection />
         <BodyPage />

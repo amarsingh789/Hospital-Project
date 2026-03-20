@@ -157,9 +157,17 @@
 import React, { useState, useEffect } from 'react';
 import { Activity, Menu, X, ArrowRight, User } from 'lucide-react';
 
+import { openAuthModal } from '../../Redux/Features/ui/uiSlice';
+import { logout } from '../../Redux/Features/authentication/authSlice';
+import { useDispatch, useSelector } from 'react-redux';
+
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const dispatch = useDispatch()
+
+  const {isAuthenticated, user} = useSelector((state) => state.auth)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -179,7 +187,7 @@ const Navbar = () => {
     { name: 'Doctors', href: '#doctors' },
     { name: 'FAQ', href: '#faq' },
   ];
-
+  
   return (
     <nav 
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 font-inter
@@ -218,16 +226,56 @@ const Navbar = () => {
         {/* ============================== */}
         <div className="hidden lg:flex items-center gap-6">
           {/* Log In Link */}
-          <button className="flex items-center gap-2 text-white/80 hover:text-clinic-yellow font-medium transition-colors duration-300">
+          {/* <button className="flex items-center gap-2 text-white/80 hover:text-clinic-yellow font-medium transition-colors duration-300">
             <User size={18} />
             Log In
-          </button>
+          </button> */}
 
           {/* Sign Up / Register Button */}
-          <button className="flex items-center gap-2 bg-clinic-yellow text-[#021814] px-6 py-2.5 rounded-xl font-bold font-poppins hover:bg-white transition-all duration-300 hover:shadow-[0_0_20px_rgba(223,255,79,0.4)] active:scale-95 group">
+          {/* <button className="flex items-center gap-2 bg-clinic-yellow text-[#021814] px-6 py-2.5 rounded-xl font-bold font-poppins hover:bg-white transition-all duration-300 hover:shadow-[0_0_20px_rgba(223,255,79,0.4)] active:scale-95 group">
             Sign Up 
             <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-          </button>
+          </button> */}
+
+          {/* LOGIC: Agar user logged in hai toh uska Name dikhao, warna buttons dikhao */}
+          {isAuthenticated ? (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2 text-white font-medium">
+                {/* User ka first letter as Avatar */}
+                <span className="w-8 h-8 rounded-full bg-clinic-yellow text-[#021814] flex items-center justify-center font-bold font-poppins">
+                  {user?.name?.charAt(0) || 'U'}
+                </span>
+                {user?.name || 'User'}
+              </div>
+              <button 
+                onClick={() => dispatch(logout())}
+                className="text-white/60 hover:text-red-400 transition-colors"
+                title="Logout"
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Log In Link */}
+              <button 
+                onClick={() => dispatch(openAuthModal('login'))} // Click par Login Modal khulega
+                className="flex items-center gap-2 text-white/80 hover:text-clinic-yellow font-medium transition-colors duration-300"
+              >
+                <User size={18} />
+                Log In
+              </button>
+
+              {/* Sign Up / Register Button */}
+              <button 
+                onClick={() => dispatch(openAuthModal('signup'))} // Click par Signup Modal khulega
+                className="flex items-center gap-2 bg-clinic-yellow text-[#021814] px-6 py-2.5 rounded-xl font-bold font-poppins hover:bg-white transition-all duration-300 hover:shadow-[0_0_20px_rgba(223,255,79,0.4)] active:scale-95 group"
+              >
+                Sign Up 
+                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+              </button>
+            </>
+          )}
         </div>
 
         {/* ============================== */}
@@ -266,7 +314,7 @@ const Navbar = () => {
           {/* Mobile Auth Buttons Divider */}
           <div className="w-16 h-[1px] bg-white/20 my-2"></div>
 
-          <li>
+          {/* <li>
             <button className="flex items-center gap-2 text-white/80 hover:text-clinic-yellow text-lg transition-colors">
               <User size={20} /> Log In
             </button>
@@ -275,7 +323,51 @@ const Navbar = () => {
             <button className="bg-clinic-yellow text-[#021814] px-8 py-3 rounded-xl font-bold font-poppins hover:bg-white transition-colors w-full flex items-center justify-center gap-2">
               Create Account <ArrowRight size={18} />
             </button>
-          </li>
+          </li> */}
+
+          {isAuthenticated ? (
+            <>
+              <li className="text-clinic-yellow font-bold text-lg">
+                Hi, {user?.name || 'User'}
+              </li>
+              <li>
+                <button 
+                  onClick={() => {
+                    dispatch(logout());
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="flex items-center gap-2 text-red-400 hover:text-red-300 transition-colors"
+                >
+                  <LogOut size={20} /> Logout
+                </button>
+              </li>
+            </>
+          ) : (
+            <>
+              <li>
+                <button 
+                  onClick={() => {
+                    dispatch(openAuthModal('login'));
+                    setIsMobileMenuOpen(false); // Modal khulte hi mobile menu band kar do
+                  }}
+                  className="flex items-center gap-2 text-white/80 hover:text-clinic-yellow text-lg transition-colors"
+                >
+                  <User size={20} /> Log In
+                </button>
+              </li>
+              <li>
+                <button 
+                  onClick={() => {
+                    dispatch(openAuthModal('signup'));
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="bg-clinic-yellow text-[#021814] px-8 py-3 rounded-xl font-bold font-poppins hover:bg-white transition-colors w-full flex items-center justify-center gap-2"
+                >
+                  Create Account <ArrowRight size={18} />
+                </button>
+              </li>
+            </>
+          )}
         </ul>
       </div>
 
