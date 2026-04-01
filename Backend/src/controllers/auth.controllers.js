@@ -200,7 +200,8 @@ export async function refreshToken(req, res){
         });
     }
 
-    const decoded = jwt.verify(refreshToken, config.JWT_SECRET);
+    try{
+        const decoded = jwt.verify(refreshToken, config.JWT_SECRET);
 
     const refreshTokenHash = crypto.createHash('sha256').update(refreshToken).digest('hex')
 
@@ -216,35 +217,66 @@ export async function refreshToken(req, res){
     }
 
     const accessToken = jwt.sign({
-        id: decoded.id
+        id: decoded.id,
+        sessionId: session._id
     }, config.JWT_SECRET, {
         expiresIn: '15m'
     })
 
-    const newRefreshToken = jwt.sign({
-        id: decoded.id
-    },
-    config.JWT_SECRET,{
-        expiresIn: '7d'
-    },
-);
+//     const newRefreshToken = jwt.sign({
+//         id: decoded.id
+//     },
+//     config.JWT_SECRET,{
+//         expiresIn: '7d'
+//     },
+// );
 
-    const newRefreshTokenHash = crypto.createHash('sha256').update(newRefreshToken).digest('hex')
+//     const newRefreshTokenHash = crypto.createHash('sha256').update(newRefreshToken).digest('hex')
 
-    session.refreshTokenHash = newRefreshTokenHash
-    await session.save()
+//     session.refreshTokenHash = newRefreshTokenHash
+//     await session.save()
 
-    res.cookie('refreshToken', newRefreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 *60 * 1000
-    })
+//     res.cookie('refreshToken', newRefreshToken, {
+//         httpOnly: true,
+//         secure: true,
+//         sameSite: 'strict',
+//         maxAge: 7 * 24 * 60 *60 * 1000
+//     })
+    const now = Math.floor(Date.now()/1000);
+    const secondsToExpire = decoded.exp - now;
+
+    const refreshBuffer = 2 * 24 * 60 * 60; 
+
+    if(secondsToExpire < refreshBuffer){
+        console.log('Refresh token is nearing expiration, consider issuing a new one');
+
+        const newRefreshToken = jwt.sign({
+            id: decoded.id
+        }, config.JWT_SECRET,{
+            expiresIn: '7d'
+        })
+
+        const newRefreshTokenHash = crypto.createHash('sha256').update(newRefreshToken).digest('hex')
+        
+        session.refreshTokenHash = newRefreshTokenHash
+        await session.save()
+
+        res.cookie('refreshToken', newRefreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'strict',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        })
+       }
 
     res.status(200).json({
         message: "Access token refreshed successfully",
         accessToken
     })
+    }catch(err){
+        console.error("Refresh Token Error:", err.message);
+        return res.status(401).json({ message: 'Refresh token invalid' });
+    }
 }
 
 export async function logout(req, res){

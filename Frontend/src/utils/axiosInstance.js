@@ -1,47 +1,69 @@
-import axios from "axios";
+import axios from 'axios';
+
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) prom.reject(error);
+    else prom.resolve(token);
+  });
+  failedQueue = [];
+};
+
 const api = axios.create({
-    baseURL: 'http://localhost:5000',
-    withCredentials: true
+  baseURL: 'http://localhost:5000',
+  withCredentials: true,
 });
 
-api.interceptors.request.use(
-    (config) =>{
-        const token = localStorage.getItem('ziva_token');
-        if(token){
-            config.headers.Authorization = `Bearer ${token}`
-        }
-        return config
-    },
-    (error) => Promise.reject(error)
-)
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('ziva_token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
 api.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        const originalRequest = error.config
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
 
-        if(error.response && (error.response.status === 401 || error.response.status === 403) && !originalRequest._retry ){
-            originalRequest._retry = true
+    // Agar 401 aata hai aur request refresh-token ki nahi hai
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      
+      if (isRefreshing) {
+        // Agar pehle se ek refresh call chal rahi hai, to baki sab ko queue mein daalo
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers['Authorization'] = 'Bearer ' + token;
+          return api(originalRequest);
+        }).catch(err => Promise.reject(err));
+      }
 
-            try{
-                const res = await axios.get('http://localhost:5000/api/refresh-token', {
-                    withCredentials: true
-                });
+      originalRequest._retry = true;
+      isRefreshing = true;
 
-                const newAccessToken = res.data.accessToken;
-                localStorage.setItem('ziva_token', newAccessToken)
-
-                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
-                return api(originalRequest)
-            }catch(refreshError){
-                console.error("Refresh token expire ho gaya ya fail ho gaya:", refreshError);
-                localStorage.removeItem('ziva_token');
-                window.location.href = '/login';
-                return Promise.reject(refreshError);
-            }
-        }
-        return Promise.reject(error)
+      return new Promise((resolve, reject) => {
+        // 🚀 Asli Refresh Call (Backend route check kar lena /api/refresh-token hai ya /zivacare/...)
+        axios.get('http://localhost:5000/api/refresh-token', { withCredentials: true })
+          .then(({ data }) => {
+            localStorage.setItem('ziva_token', data.accessToken);
+            api.defaults.headers.common['Authorization'] = 'Bearer ' + data.accessToken;
+            originalRequest.headers['Authorization'] = 'Bearer ' + data.accessToken;
+            processQueue(null, data.accessToken);
+            resolve(api(originalRequest));
+          })
+          .catch((err) => {
+            processQueue(err, null);
+            localStorage.removeItem('ziva_token');
+            window.location.href = '/login';
+            reject(err);
+          })
+          .finally(() => { isRefreshing = false; });
+      });
     }
+    return Promise.reject(error);
+  }
 );
 
-export default api
+export default api;
