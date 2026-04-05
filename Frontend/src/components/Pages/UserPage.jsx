@@ -3,7 +3,6 @@ import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion"; // 🚀 Added Framer Motion
-
 import {
   User, Mail, Phone, MapPin, Calendar, Activity,
   Shield, Camera, Save, X, Droplet, Ruler, Edit2,
@@ -17,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger }                       from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger }      from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
+import { useSelector } from "react-redux";
 
 const fmt = (d) =>
   d ? d.toLocaleDateString("en-IN", { day:"numeric", month:"long", year:"numeric" }) : null;
@@ -61,6 +61,7 @@ function LockedField({ icon: Icon, iconColor, label, value }) {
 
 // ─── Main ──────────────────────────────────────────────────────────────────
 const UserPage = () => {
+  const {user} =useSelector((state) => state.auth)
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
 
@@ -72,15 +73,17 @@ const UserPage = () => {
   
   // State for all editable fields
   const [formData, setFormData] = useState({
-    name: "Amar Singh",
-    gender: "Male",
-    address: "",
-    bloodGroup: "B+",
-    height: "175",
-    weight: "68",
+    name: user?.name || "",
+    email: user?.email || "", 
+    mobileNumber: user?.mobileNumber || "",
+    gender: user?.gender || "Male",
+    address: user?.address || "",
+    bloodGroup: user?.bloodGroup || "B+",
+    height: user?.height || "175",
+    weight: user?.weight || "68",
   });
   
-  const [dob,     setDob]     = useState(new Date("1998-05-15"));
+  const [dob,     setDob]     = useState(user?.dob ? new Date(user.dob) : new Date("1998-05-15"));
   const [dobOpen, setDobOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [saved,   setSaved]   = useState(false);
