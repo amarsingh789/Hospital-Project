@@ -17,6 +17,8 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
 import { Eye, EyeOff, Loader2, User, Mail, Phone } from "lucide-react";
+import { loginSuccess } from "../../Redux/Features/authentication/authSlice.js";
+import { useDispatch } from "react-redux";
 
 // Schema
 const signupSchema = z.object({
@@ -51,7 +53,7 @@ const SignupPage = () => {
       password: "",
     },
   });
-
+  const dispatch = useDispatch()
   const onSumbit = async (values) => {
     setLoading(true)
     // console.log("Submitting Signup:", values);
@@ -79,6 +81,11 @@ const SignupPage = () => {
       const res = await axios.post('http://localhost:5000/api/register', values);
       console.log("Signup Success:", res.data);
       
+      dispatch(loginSuccess({
+        user: res.data.user,
+        token: res.data.token
+      }))
+
       // 🚀 SUCCESS TOAST
       toast.success("Account created successfully! Please login.");
       
