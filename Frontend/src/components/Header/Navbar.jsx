@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Activity, Menu, X, ArrowRight, User, LogOut } from "lucide-react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, href } from "react-router-dom";
 import { logout } from "../../Redux/Features/authentication/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
@@ -19,6 +19,20 @@ const Navbar = () => {
 
   // Check if we are on the home page
   const isHomePage = location.pathname === "/";
+
+  const hanadleNavClick = (e, href) => {
+    setIsMobileMenuOpen(false);
+
+    if(href.startsWith("/#") && location.pathname === "/") {
+      e.preventDefault();
+      const targetId = href.replace("/#", "");
+      const targetElement = document.getElementById(targetId);
+
+      if(targetElement){
+        targetElement.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }
+  }
 
   const handleLogout = async () => {
     try {
@@ -163,6 +177,7 @@ const Navbar = () => {
                 >
                   <Link
                     to={link.href}
+                    onClick={(e) => hanadleNavClick(e, link.href)}
                     className="hover:text-white transition-colors duration-300"
                   >
                     {link.name}
@@ -182,6 +197,7 @@ const Navbar = () => {
                 >
                   <Link
                     to={link.href}
+                    onClick={(e) => handleNavClick(e, link.href)}
                     className="hover:text-white transition-colors duration-300"
                   >
                     {link.name}
@@ -307,7 +323,8 @@ const Navbar = () => {
                 <motion.div variants={mobileItemVariants} key={index} className="w-full text-center">
                   <Link
                     to={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={(e) => hanadleNavClick(e, link.href)}
+                    // onClick={() => setIsMobileMenuOpen(false)}
                     className="block text-2xl font-poppins font-bold text-white/80 hover:text-[#dfff4f] transition-colors w-full py-2"
                   >
                     {link.name}
